@@ -308,8 +308,8 @@ func journalHandler(w http.ResponseWriter, r *http.Request) {
 
 func helloHandler() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// Sajikan file index.html dari folder parent
-		http.ServeFile(w, r, "../index.html")
+		// Sajikan file index.html di root directory
+		http.ServeFile(w, r, "index.html")
 	})
 }
 

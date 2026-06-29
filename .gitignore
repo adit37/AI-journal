@@ -1,10 +1,22 @@
-# Mengabaikan file database SQLite (Data Pribadi)
-*.db
-*.db-journal
-
-# Mengabaikan file binary hasil kompilasi
-server-backend
+# Binaries for programs and plugins
 *.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+ai-journal
 
-# Mengabaikan environment variables / file konfigurasi rahasia
-.env
+# Test cluster, profiling, etc.
+*.test
+*.prof
+
+# Database
+journal.db
+*.db
+
+# macOS
+.DS_Store
+
+# Editor / IDE
+.vscode/
+.idea/

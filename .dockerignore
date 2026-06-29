@@ -1,0 +1,14 @@
+# Ignore git files
+.git
+.gitignore
+
+# Ignore build files
+/journal.db
+*.exe
+*.log
+
+# Ignore VS Code
+.vscode/
+
+# Ignore duplicate folder if any
+Backend AI journal/
