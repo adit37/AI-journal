@@ -81,15 +81,15 @@ func callGeminiAPI(description string) (geminiResponse, error) {
 
 	// Buat instruksi (System Prompt) agar Gemini mengembalikan format JSON yang kaku
 	instruction := fmt.Sprintf(`
-		Kamu adalah seorang Psikolog dan Mentor Produktivitas.
-		Analisis aktivitas berikut: "%s".
+		Kamu adalah Asisten Jurnal Pribadi AI yang empatik, ceria, dan suportif.
+		Analisis entri jurnal harian berikut: "%s".
 		Berikan output harus berupa JSON mentah murni tanpa markdown, tanpa teks pembuka, dan tanpa tanda petik tiga
 		Format JSON harus persis seperti ini:
 		{
-			"score": 80,
-			"eq_analysis": "<analisis emosional singkat>",
-			"motivation": "<motivasi terkait aktivitas>",
-			"evaluation": "<evaluasi taktis aktivitas harian>"
+			"score": 85,
+			"eq_analysis": "<analisis kecerdasan emosional (EQ) dari jurnal, maksimal 2 kalimat>",
+			"motivation": "<kata-kata motivasi yang hangat, ceria, dan menyemangati>",
+			"evaluation": "<evaluasi singkat tentang produktivitas atau pelajaran hari ini>"
 		}`, description)
 	// Terkadang jika kita menaruh tanda kurung siku/kurung sudut di dalam format JSON,
 	// AI malah akan mencetak ulang tanda kurungnya.
@@ -246,12 +246,70 @@ func journalHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(newEntry)
 		return
 	}
+
+	// ALUR PUT: Mengupdate entri jurnal yang ada (Minta analisis Gemini ulang)
+	if r.Method == http.MethodPut {
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			http.Error(w, "ID jurnal diperlukan", http.StatusBadRequest)
+			return
+		}
+
+		var input struct {
+			Activity    string `json:"activity"`
+			Description string `json:"description"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			http.Error(w, fmt.Sprintf("Request payload tidak valid %v", err), http.StatusBadRequest)
+			return
+		}
+
+		// Panggil Gemini API ulang untuk mendapatkan analisis baru
+		geminiResult, err := callGeminiAPI(input.Description)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Gagal memanggil Gemini API: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		updateSQL := `UPDATE journal_entries SET activity=?, description=?, score=?, eq_analysis=?, motivation=?, evaluation=? WHERE id=?`
+		_, err = db.Exec(updateSQL, input.Activity, input.Description, geminiResult.Score, geminiResult.EQAnalysis, geminiResult.Motivation, geminiResult.Evaluation, id)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Gagal mengupdate entri jurnal: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"status": "sukses", "message": "Jurnal berhasil diupdate"})
+		return
+	}
+
+	// ALUR DELETE: Menghapus entri jurnal
+	if r.Method == http.MethodDelete {
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			http.Error(w, "ID jurnal diperlukan", http.StatusBadRequest)
+			return
+		}
+
+		deleteSQL := `DELETE FROM journal_entries WHERE id=?`
+		_, err := db.Exec(deleteSQL, id)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Gagal menghapus entri jurnal: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"status": "sukses", "message": "Jurnal berhasil dihapus"})
+		return
+	}
+
 	http.Error(w, "Method Tidak tersedia", http.StatusMethodNotAllowed)
 }
 
 func helloHandler() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, World!, Journal AI Aktif euy")
+		// Sajikan file index.html dari folder parent
+		http.ServeFile(w, r, "../index.html")
 	})
 }
 

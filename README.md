@@ -5,12 +5,14 @@ Sebuah RESTful API Backend yang dibangun menggunakan **Go (Golang)** untuk menca
 ## 🛠️ Tech Stack & Architecture
 * **Language:** Go (Golang) - Menggunakan Standard Library `net/http`
 * **Database:** SQLite (In-file persistence database)
-* **AI Integration:** Google Gemini 1.5 Flash API (Prompt Engineering for JSON output)
+* **AI Integration:** Google Gemini 2.0 Flash API (Prompt Engineering for JSON output)
 * **Containerization:** Docker Ready (Dockerfile included)
 
 ## 📌 Features
 * `POST /journal`: Menyimpan aktivitas dan men-trigger AI untuk melakukan analisis (*scoring, EQ check, motivation*).
 * `GET /journal`: Mengambil seluruh riwayat jurnal yang tersimpan permanen di dalam SQLite.
+* `PUT /journal?id=<id>`: Memperbarui (edit) entri jurnal dan meminta analisis ulang AI Gemini.
+* `DELETE /journal?id=<id>`: Menghapus riwayat jurnal.
 * Auto-structuring response AI menggunakan teknik Nested JSON Unmarshaling.
 
 ## 🚀 How to Run Locally
